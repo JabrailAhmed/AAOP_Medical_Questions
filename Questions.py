@@ -13,19 +13,19 @@ class SurveyApp(ctk.CTk):
 
         # --- Window Setup ---
         self.title("Secure Information Survey")
-        self.geometry("600x600")  # Vertical headroom for multi-line layout options
+        self.geometry("600x600")
         self.resizable(False, False)
 
         # --- Survey Questions ---
         self.questions = [
-            ("Check off each of the tasks that your baby is able to do",
+            ("Check off each of the tasks that your baby is able to do:",
              ["Stay awake for a short time to feed.",
               "Calm to an adult's voice.",
-              "Move her arms and legs at the same time when startled",
+              "Move her arms and legs at the same time when startled.",
               "Make brief eye contact with an adult when held.",
-              "Lift and turn their head to the side briefly when they're on their tummy",
-              "Keep hands in a fist",
-              "Cry when they are uncomfortable"]),
+              "Lift and turn their head to the side briefly when on their tummy.",
+              "Keep hands in a fist.",
+              "Cry when they are uncomfortable."]),
             "Do you prefer working from home over an office?",
             "Is Python your favorite programming language?",
             "Do you use dark mode on all your apps?",
@@ -34,10 +34,9 @@ class SurveyApp(ctk.CTk):
         ]
 
         self.current_index = 0
-        self.recorded_answers = [""] * len(self.questions) # Instantiated empty list structure to match navigational steps
+        self.recorded_answers = [""] * len(self.questions)
         self.user_profile = {}
 
-        # Keep track of active dynamic question widgets safely
         self.checkbox_vars = []
         self.checkbox_objects = []
 
@@ -72,79 +71,74 @@ class SurveyApp(ctk.CTk):
             self.form_frame, text="Start Survey", font=ctk.CTkFont(size=15, weight="bold"), height=40, command=self.submit_profile
         )
         self.submit_btn.pack(pady=(15, 0))
-        # --- Survey Screen UI Elements (Screen 2 - Hidden Initially) ---
+
+        # --- Survey Screen UI Elements (Screen 2) ---
         self.survey_frame = ctk.CTkFrame(self, fg_color="transparent")
 
         self.progress_bar = ctk.CTkProgressBar(self.survey_frame, width=480)
-        self.progress_bar.pack(pady=(20, 5))
+        self.progress_bar.pack(pady=(15, 5), padx=40)
         self.progress_bar.set(0)
 
         self.counter_label = ctk.CTkLabel(
             self.survey_frame, text="", font=ctk.CTkFont(size=14, weight="bold")
         )
-        self.counter_label.pack(pady=5)
+        self.counter_label.pack(pady=2, padx=40)
 
-        # --- FIX: Main 3-Column Navigation Layout Setup for Middle Section ---
+        # Container for the question label
+        self.question_frame = ctk.CTkFrame(self.survey_frame, fg_color="transparent", height=60)
+        self.question_frame.pack(fill="x", padx=40, pady=5)
+        self.question_frame.pack_propagate(False)
+
+        self.question_label = ctk.CTkLabel(
+            self.question_frame, text="", font=ctk.CTkFont(size=16, weight="bold"), wraplength=480, justify="center"
+        )
+        self.question_label.pack(fill="both", expand=True)
+
+        # Center middle horizontal row for navigation controls
         self.middle_navigation_frame = ctk.CTkFrame(self.survey_frame, fg_color="transparent")
-        self.middle_navigation_frame.pack(fill="both", expand=True, padx=10, pady=10)
-
-        # Configure columns so middle column expands while side buttons stay thin
-        self.middle_navigation_frame.columnconfigure(0, weight=0)
-        self.middle_navigation_frame.columnconfigure(1, weight=1)
-        self.middle_navigation_frame.columnconfigure(2, weight=0)
+        self.middle_navigation_frame.pack(fill="x", padx=15, pady=10)
 
         # Left Backwards Button
         self.back_nav_button = ctk.CTkButton(
-            self.middle_navigation_frame, text="◀ BACK", width=70, height=40,
+            self.middle_navigation_frame, text="◀ BACK", width=100, height=40,
             font=ctk.CTkFont(size=13, weight="bold"), fg_color="#7f8c8d", hover_color="#95a5a6",
             command=self.step_backward
         )
-        self.back_nav_button.grid(row=0, column=0, padx=(5, 10), sticky="w")
-
-        # Center Container Content Frame
-        self.center_content_frame = ctk.CTkFrame(self.middle_navigation_frame, fg_color="transparent")
-        self.center_content_frame.grid(row=0, column=1, sticky="nsew")
+        self.back_nav_button.pack(side="left")
 
         # Right Forwards Button
         self.forward_nav_button = ctk.CTkButton(
-            self.middle_navigation_frame, text="NEXT ▶", width=70, height=40,
+            self.middle_navigation_frame, text="NEXT ▶", width=100, height=40,
             font=ctk.CTkFont(size=13, weight="bold"), fg_color="#3498db", hover_color="#2980b9",
             command=self.step_forward
         )
-        self.forward_nav_button.grid(row=0, column=2, padx=(10, 5), sticky="e")
+        self.forward_nav_button.pack(side="right")
 
-        # Place question label inside center layout block
-        self.question_label = ctk.CTkLabel(
-            self.center_content_frame, text="", font=ctk.CTkFont(size=17, weight="bold"), wraplength=380, justify="center"
-        )
-        self.question_label.pack(pady=(10, 10))
+        # Centered Checkbox display frame inside main survey container area
+        self.checkbox_frame = ctk.CTkScrollableFrame(self.survey_frame, width=340, height=220, fg_color="transparent")
 
-        # Checkbox display container inside center content layout block
-        self.checkbox_frame = ctk.CTkFrame(self.center_content_frame, fg_color="transparent")
-
-        # Control Panel Bottom Layer Action Frame
+        # --- Bottom Control Frame Row ---
         self.control_frame = ctk.CTkFrame(self.survey_frame, fg_color="transparent")
-        self.control_frame.pack(pady=(10, 20), side="bottom")
+        self.control_frame.pack(fill="x", pady=(10, 20), padx=40)
 
-        # Original bottom option buttons
         self.yes_button = ctk.CTkButton(
-            self.control_frame, text="YES", width=120, height=45, font=ctk.CTkFont(size=15, weight="bold"),
+            self.control_frame, text="YES", width=110, height=45, font=ctk.CTkFont(size=15, weight="bold"),
             fg_color="#2ecc71", hover_color="#27ae60", command=lambda: self.record_bottom_response("Yes")
         )
         self.unsure_button = ctk.CTkButton(
-            self.control_frame, text="UNSURE", width=120, height=45, font=ctk.CTkFont(size=15, weight="bold"),
+            self.control_frame, text="UNSURE", width=110, height=45, font=ctk.CTkFont(size=15, weight="bold"),
             fg_color="#f39c12", hover_color="#d35400", command=lambda: self.record_bottom_response("Unsure")
         )
         self.no_button = ctk.CTkButton(
-            self.control_frame, text="NO", width=120, height=45, font=ctk.CTkFont(size=15, weight="bold"),
+            self.control_frame, text="NO", width=110, height=45, font=ctk.CTkFont(size=15, weight="bold"),
             fg_color="#e74c3c", hover_color="#c0392b", command=lambda: self.record_bottom_response("No")
         )
 
-        # Download summary report button
         self.download_button = ctk.CTkButton(
             self.control_frame, text="📥 Download .txt", width=250, height=45, font=ctk.CTkFont(size=16, weight="bold"),
             fg_color="#3498db", hover_color="#2980b9", command=self.trigger_file_download
         )
+
     def submit_profile(self):
         """Validates input field values, enforces numericality, and restricts length to exactly 10 digits."""
         self.form_title.configure(text="Please Enter Your Details", text_color=ctk.ThemeManager.theme["CTkLabel"]["text_color"])
@@ -176,17 +170,35 @@ class SurveyApp(ctk.CTk):
             return
 
         self.form_frame.pack_forget()
-        self.survey_frame.pack(pady=20, padx=40, fill="both", expand=True)
+        self.survey_frame.pack(pady=20, fill="both", expand=True)
         self.load_question()
+
+    def update_scrollbar_visibility(self):
+        """Dynamically calculates element height to safely hide or reveal the scrollbar handle."""
+        self.update_idletasks()
+        bbox = self.checkbox_frame._canvas.bbox("all")
+        if bbox:
+            content_height = bbox[3] - bbox[1]
+            frame_height = self.checkbox_frame._canvas.winfo_height()
+
+            if content_height <= frame_height:
+                self.checkbox_frame._scrollbar.grid_forget()
+                self.checkbox_frame._canvas.configure(width=340)
+
     def load_question(self):
         """Monitors overall response index loop values to step text layout panels."""
-        # Clean out old checkbox widgets safely from container space
         for cb in self.checkbox_objects:
             try:
                 cb.pack_forget()
                 cb.destroy()
             except Exception:
                 pass
+
+        try:
+            self.checkbox_frame._scrollbar.grid_forget()
+        except Exception:
+            pass
+
         self.checkbox_frame.pack_forget()
         self.checkbox_vars = []
         self.checkbox_objects = []
@@ -195,59 +207,52 @@ class SurveyApp(ctk.CTk):
             self.counter_label.configure(text=f"Question {self.current_index + 1} of {len(self.questions)}")
             self.progress_bar.set(self.current_index / len(self.questions))
 
-            # Dynamic button adjustments based on timeline position rules
             if self.current_index == 0:
                 self.back_nav_button.configure(state="disabled", fg_color="#bdc3c7")
             else:
                 self.back_nav_button.configure(state="normal", fg_color="#7f8c8d")
 
-            # --- CASE 1: The First Question (Safe Checklist Setup) ---
+            # --- CASE 1: The First Question (Scrollable Checklist View Layer Centered) ---
             if self.current_index == 0:
                 question_text, options = self.questions[self.current_index]
                 self.question_label.configure(text=question_text)
 
-                # Reveal side navigation buttons and hide bottom choices row elements
-                self.forward_nav_button.grid(row=0, column=2, padx=(10, 5), sticky="e")
-                self.yes_button.grid_forget()
-                self.unsure_button.grid_forget()
-                self.no_button.grid_forget()
+                self.forward_nav_button.pack(side="right")
+                self.yes_button.pack_forget()
+                self.unsure_button.pack_forget()
+                self.no_button.pack_forget()
 
-                self.checkbox_frame.pack(fill="both", expand=True, padx=20)
-
-                raw_text_color = ctk.ThemeManager.theme["CTkLabel"]["text_color"]
-                raw_bg_color = self.checkbox_frame.cget("fg_color")
-                if raw_bg_color == "transparent":
-                    raw_bg_color = self.cget("fg_color")
-
-                bg_color = self._apply_appearance_mode(raw_bg_color)
-                text_color = self._apply_appearance_mode(raw_text_color)
+                self.checkbox_frame.pack(pady=10, expand=True)
 
                 for option in options:
                     var = tk.IntVar(value=0)
-                    cb = tk.Checkbutton(
+                    cb = ctk.CTkCheckBox(
                         self.checkbox_frame, text=option, variable=var,
-                        onvalue=1, offvalue=0, font=("Arial", 10),
-                        wraplength=340, justify="left", anchor="w",
-                        fg=text_color, bg=bg_color, selectcolor=bg_color,
-                        activebackground=bg_color, activeforeground=text_color,
-                        bd=0, highlightthickness=0
+                        onvalue=1, offvalue=0, font=ctk.CTkFont(size=12)
                     )
-                    cb.pack(anchor="w", padx=20, pady=4, fill="x")
+                    cb.pack(anchor="w", pady=6, padx=10, fill="x")
                     self.checkbox_vars.append((var, option))
                     self.checkbox_objects.append(cb)
 
-            # --- CASE 2: Remaining Questions (Original YES/UNSURE/NO Option Layout) ---
-            else:
-                # Hide the middle section right next arrow button since choices use bottom row buttons
-                self.forward_nav_button.grid_forget()
+                self.after(50, self.update_scrollbar_visibility)
 
-                self.yes_button.grid(row=0, column=0, padx=8)
-                self.unsure_button.grid(row=0, column=1, padx=8)
-                self.no_button.grid(row=0, column=2, padx=8)
+            # --- CASE 2: Text Response Option Framework ---
+            else:
+                self.forward_nav_button.pack_forget()
+                self.yes_button.pack_forget()
+                self.unsure_button.pack_forget()
+                self.no_button.pack_forget()
+
+                self.yes_button.pack(side="left", expand=True, padx=5)
+                self.unsure_button.pack(side="left", expand=True, padx=5)
+                self.no_button.pack(side="left", expand=True, padx=5)
 
                 self.question_label.configure(text=self.questions[self.current_index])
+
+            self.update()
         else:
             self.transition_to_download()
+
     def step_forward(self):
         """Processes checklist logic for question 1 using side button link selection tracking."""
         if self.current_index == 0:
@@ -271,25 +276,27 @@ class SurveyApp(ctk.CTk):
         self.recorded_answers[self.current_index] = user_choice
         self.current_index += 1
         self.load_question()
+
     def transition_to_download(self):
         """Hides design components completely and swaps view window blocks layout layers."""
         self.progress_bar.set(1.0)
         self.counter_label.configure(text="Survey Complete!")
 
-        # Hide all navigation structures out of sight cleanly
-        self.back_nav_button.grid_forget()
-        self.forward_nav_button.grid_forget()
-        self.yes_button.grid_forget()
-        self.unsure_button.grid_forget()
-        self.no_button.grid_forget()
+        self.back_nav_button.pack_forget()
+        self.forward_nav_button.pack_forget()
 
-        self.download_button.grid(row=0, column=0, columnspan=3, padx=15)
+        self.yes_button.pack_forget()
+        self.unsure_button.pack_forget()
+        self.no_button.pack_forget()
+
+        self.download_button.pack(pady=20)
 
         self.question_label.configure(
             text=f"Thank you, {self.user_profile['first_name']}!\n\nClick the button below to download your summary text report asset file contents.",
             font=ctk.CTkFont(size=15),
             justify="center"
         )
+        self.update()
 
     def trigger_file_download(self):
         """Launches native system file explorer panel framework to structure output asset drops."""
@@ -316,7 +323,7 @@ class SurveyApp(ctk.CTk):
         file_content += "RESPONSES:\n"
 
         for i, q in enumerate(self.questions):
-            q_text = q if isinstance(q, tuple) else q
+            q_text = q[0] if isinstance(q, tuple) else q
             file_content += f"{i+1}. {q_text}\n"
             file_content += f"   Answer: {self.recorded_answers[i]}\n\n"
 
